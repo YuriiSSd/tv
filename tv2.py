@@ -154,16 +154,17 @@ read_mapping()
 
 data = []
 print("ganerate Tv Programm...")
-for date_chunk in sorted(os.listdir(cache_path)):
-    with open(os.path.join(cache_path, date_chunk), "r", encoding="utf-8") as f:
-        data.extend(json.load(f))
 
-for item in data:
-    channel_id = str(item['channel']['id'])
-    if channel_id not in all_yandex_ids:
-        continue
-    for event in item['events']:
-        program_tags(event, channel_id)
+# for date_chunk in sorted(os.listdir(cache_path)):
+#     with open(os.path.join(cache_path, date_chunk), "r", encoding="utf-8") as f:
+#         data.extend(json.load(f))
+#
+# for item in data:
+#     channel_id = str(item['channel']['id'])
+#     if channel_id not in all_yandex_ids:
+#         continue
+#     for event in item['events']:
+#         program_tags(event, channel_id)
 
 xml_lines.append(f'</tv>')
 with open('zzzfinal.xml', 'w', encoding='utf-8') as f:
