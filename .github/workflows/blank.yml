@@ -1,36 +1,56 @@
-# This is a basic workflow to help you get started with Actions
+name: Run TV Parser
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch: # Запуск только вручную по кнопке
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build-and-run:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    # 1. Скачиваем файлы репозитория (скрипт tv2.py и маппинг)
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+    # 2. Активируем Python
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+    # 3. Подключаем постоянное хранилище (кэш) для папки bydate и библиотек
+    - name: Cache packages and bydate folder
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          bydate
+        key: ${{ runner.os }}-tv-parser-cache-v1
+
+    # 4. Устанавливаем библиотеку requests (в первый раз скачается, потом будет из кэша)
+    - name: Install dependencies
+      run: pip install requests
+
+    # 5. Запускаем ваш Python-скрипт парсера
+    - name: Run parser script
+      run: python tv2.py
+
+    # 6. Подготавливаем созданный файл zzzfinal.xml для публикации
+    - name: Upload artifact for Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        exclude: |
+          bydate/**
+          .github/**
+          tv2.py
+          channels_mapping.csv
+
+    # 7. Публикуем файл на GitHub Pages (создаем прямую ссылку)
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
